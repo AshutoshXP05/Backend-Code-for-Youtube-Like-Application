@@ -1,0 +1,15 @@
+{
+  "name": "yt-backend-project",
+  "version": "1.0.0",
+  "description": "Backend code for Youtube like Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascipt",
+    "backend"
+  ],
+  "author": "Ashutosh Kumar",
+  "license": "ISC"
+}
