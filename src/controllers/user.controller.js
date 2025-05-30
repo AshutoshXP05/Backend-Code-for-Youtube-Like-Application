@@ -10,7 +10,7 @@ const registerUser = asyncHandler( async ( req, res ) => {
     // }) 
 
     const {fullName, userName, email, password} = req.body
-    console.log("email : " , email) ;
+    // console.log("email : " , email) ;
 
 
     // if ( fullName === "" ) {
@@ -26,9 +26,9 @@ const registerUser = asyncHandler( async ( req, res ) => {
     
     // check either username and email already exist or not 
      
-   const existedUser = User.findOne({
-    $or: [ {userName}, {email} ]
-   })
+   const existedUser = await User.findOne({
+    $or: [{ userName }, { email }],
+  });
     
     if ( existedUser ) {
         throw new ApiError(409 , "Either email or UserName already exist : ")
@@ -36,7 +36,12 @@ const registerUser = asyncHandler( async ( req, res ) => {
 
     const avatarLocaPath = req.files?.avatar[0].path
 
-    const coverImageLocaPath = req.files?.coverImage[0].path
+    // const coverImageLocaPath = req.files?.coverImage[0].path
+
+    let coverImageLocaPath;
+    if ( req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0 ) {
+        coverImageLocaPath = req.files.coverImage[0].path
+    }
 
     // check if avatar exist or not 
     if ( ! avatarLocaPath ) {
@@ -46,12 +51,12 @@ const registerUser = asyncHandler( async ( req, res ) => {
 
 
     // upload on cloudarily 
-   const avator =  await uploadOnCloudinary(avatarLocaPath)
+   const avatar =  await uploadOnCloudinary(avatarLocaPath)
    const coverImage = await uploadOnCloudinary(coverImageLocaPath)
 
-   //check avator successfully uploaded or not 
+   //check avatar successfully uploaded or not 
 
-   if ( ! avator ) {
+   if ( ! avatar ) {
     throw new ApiError(400, "Avator file is required : ")
    }
 
@@ -60,11 +65,11 @@ const registerUser = asyncHandler( async ( req, res ) => {
 
  const user = await User.create({
       fullName, 
-      avator : avator.url,
+      avatar : avatar.url,
       coverImage : coverImage.url,
       email, 
       password, 
-      userName : userName.toLowerCase()
+      userName : userName.toLowerCase() 
    })
 
 
