@@ -4,6 +4,7 @@ import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudainary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { deleteFromCloudinary } from "../utils/deleteFromCloudinary.js";
 
 
 const generateAccessandRefereshToken = async ( userId) => {
@@ -264,7 +265,7 @@ const getCurrentUser = asyncHandler( async (req, res ) => {
      return res
             .status(200)
             .json (
-                200, req.user , "Current user fetched successfully "
+               new ApiResponse( 200, req.user , "Current user fetched successfully " )
             )
 })
 
@@ -276,7 +277,7 @@ const updateAccountDetails = asyncHandler( async (req, res) => {
         throw new ApiError(400, "All fields are required : ")
     }
 
-    User.findByIdAndUpdate(
+   const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -311,6 +312,10 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
       throw new ApiError(400, "Avatar file is missing ")
   }
 
+  const existingUser = await User.findById(req.user._id)
+
+  const oldAvatarUrl = existingUser?.avatar
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -322,6 +327,14 @@ const updateUserAvatar = asyncHandler( async (req, res) => {
         new : true
     }
    ).select("-password")
+
+   if ( ! user ) {
+     throw new ApiError(500, "Failed to update avatar in database ")
+   }
+
+   if ( oldAvatarUrl ) {
+      await deleteFromCloudinary(oldAvatarUrl)
+   }
 
    return res
           .status(200)
@@ -346,6 +359,9 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
       throw new ApiError(400, "Cover Image file is missing ")
   }
 
+    const existingUser = await User.findById(req.user._id);
+    const oldCoverImageUrl = existingUser?.coverImage;
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -358,6 +374,14 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
     }
    ).select("-password")
 
+    if (!user) {
+        throw new ApiError(500, "Failed to update cover image in database.");
+    }
+
+    if (oldCoverImageUrl) {
+        await deleteFromCloudinary(oldCoverImageUrl);
+    }
+
    return res
           .status(200)
           .json(
@@ -365,6 +389,7 @@ const updateUserCoverImage = asyncHandler( async (req, res) => {
           )
 
 })
+
 
 export {
      registerUser,
